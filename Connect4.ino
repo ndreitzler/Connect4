@@ -26,7 +26,7 @@ void setup(){
   int i = 6;
   int start = 0x01;
 
-  resetGrid();
+  //resetGrid();
 //  testPrint();
 //
 //  grid[i--] = start;
@@ -41,7 +41,7 @@ void setup(){
 //  mask[6] = 0xff;
 //  mask[7] = 0xff;
 //  mask[0] = 0xff;
-  printGrid();
+   // printGrid();
 //  checkWin();
 }
   
@@ -60,12 +60,12 @@ void processUserInput(char keyPress)
   if (keyPress >= '1' && keyPress <= '7') //Vaild move
   {
     vaildMove = processUserMove( keyPress - '1');
-    if(vaildMove)
-      decideAIMove();
+    //if(vaildMove)
+      //decideAIMove();
   }
   if (keyPress == 'D') //Reset game
   {
-    resetGrid();
-    printGrid();
+    //resetGrid();
+    //printGrid();
   }
 }
