@@ -59,13 +59,10 @@ void processUserInput(char keyPress)
   
   if (keyPress >= '1' && keyPress <= '7') //Vaild move
   {
-    vaildMove = processUserMove( keyPress - '1');
-    //if(vaildMove)
-      //decideAIMove();
+    playGame( keyPress - '1');
   }
   if (keyPress == 'D') //Reset game
   {
-    //resetGrid();
-    //printGrid();
+    fullReset();
   }
 }
