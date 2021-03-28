@@ -1,4 +1,6 @@
 #include <Keypad.h>
+#include "Game.hpp"
+#include "Solver.hpp"
 
 #define ONE_SEC 1000
 #define buzzer 53
@@ -22,27 +24,7 @@ void setup(){
   Serial.begin(9600);
 
   pinMode(buzzer, OUTPUT);
-   
-  int i = 6;
-  int start = 0x01;
 
-  //resetGrid();
-//  testPrint();
-//
-//  grid[i--] = start;
-//  grid[i--] = start << 1;
-//  grid[i--] = start << 2;
-//  grid[i--] = start << 3;
-//  mask[1] = 0xff;
-//  mask[2] = 0xff;
-//  mask[3] = 0xff;
-//  mask[4] = 0xff;
-//  mask[5] = 0xff;
-//  mask[6] = 0xff;
-//  mask[7] = 0xff;
-//  mask[0] = 0xff;
-   // printGrid();
-//  checkWin();
 }
   
 void loop(){
@@ -55,14 +37,49 @@ void loop(){
 
 void processUserInput(char keyPress)
 {
-  bool vaildMove;
+  static Game MasterGame;
   
   if (keyPress >= '1' && keyPress <= '7') //Vaild move
   {
-    playGame( keyPress - '1');
+    playGame(MasterGame, keyPress - '1');
   }
   if (keyPress == 'D') //Reset game
   {
-    fullReset();
+    MasterGame.fullReset();
   }
+}
+
+void playGame(Game &MasterGame, byte keyPress)
+{
+  Solver solver;
+  int AImove;
+
+  if(MasterGame.canPlay(keyPress)) // a vaild move was made
+  {
+    MasterGame.makeHumanMove(keyPress);
+    //MasterGame.printGame();
+    if(MasterGame.checkWin(true))
+    {
+      Serial.println("Human wins");
+    }
+    AImove = solver.decideAIMove(MasterGame);
+    MasterGame.makeAIMove(AImove);
+    MasterGame.printGame();
+    if(MasterGame.checkWin(false))
+    {
+     Serial.println("Computer wins");
+    }
+  } else {  //A vaild move was not made, column was full
+    Serial.print("Column #");
+    Serial.print(keyPress);
+    Serial.print(" is full\n");
+    beep();
+  }
+}
+
+void beep(void)
+{
+    tone(buzzer, 1000);
+    delay(10);
+    noTone(buzzer);
 }
