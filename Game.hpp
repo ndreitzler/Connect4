@@ -1,6 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "MotorControl.hpp"
+
   /** 
    * A class storing a Connect 4 position.
    * Functions are relative to the human player

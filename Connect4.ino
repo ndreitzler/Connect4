@@ -1,9 +1,17 @@
 #include <Keypad.h>
 #include "Game.hpp"
 #include "Solver.hpp"
+#include "MotorControl.hpp"
+#include "Sorter.hpp"
 
 #define ONE_SEC 1000
 #define buzzer 53
+
+// Connections to A4988
+#define DROP_DIR_PIN 11  // Direction
+#define DROP_STEP_PIN 12 // Step
+#define REL_DIR_PIN 23   // Direction
+#define REL_STEP_PIN 22  // Step
 
 #define ROWS 4 //Rows of keypad
 #define COLS 4 //Columns of keypad
@@ -38,43 +46,63 @@ void loop(){
 void processUserInput(char keyPress)
 {
   static Game MasterGame;
+  static MotorControl Motors;
+  static Sorter sorter;
+  bool isGameOver = false;
   
-  if (keyPress >= '1' && keyPress <= '7') //Vaild move
+  if(isGameOver)
   {
-    playGame(MasterGame, keyPress - '1');
+    Serial.println("Game is over, hit D to reset");
   }
-  if (keyPress == 'D') //Reset game
+  else if (keyPress >= '1' && keyPress <= '7') //Vaild move
   {
-    MasterGame.fullReset();
+    isGameOver = playGame(MasterGame, keyPress - '1', Motors);
+  }
+  else if (keyPress == 'D') //Reset game
+  {
+    resetGame(MasterGame, Motors, sorter);
   }
 }
 
-void playGame(Game &MasterGame, byte keyPress)
+bool playGame(Game &MasterGame, byte keyPress, MotorControl &Motors)
 {
   Solver solver;
   int AImove;
+  bool isGameOver = false;
 
   if(MasterGame.canPlay(keyPress)) // a vaild move was made
   {
+    Motors.dropToken(keyPress);
     MasterGame.makeHumanMove(keyPress);
     //MasterGame.printGame();
     if(MasterGame.checkWin(true))
     {
+      isGameOver = true;
       Serial.println("Human wins");
+    } else {
+      AImove = solver.decideAIMove(MasterGame);
+      Motors.dropToken(AImove);
+      MasterGame.makeAIMove(AImove);
+      if(MasterGame.checkWin(false))
+      {
+        isGameOver = true;
+        Serial.println("Computer wins");
+      }
     }
-    AImove = solver.decideAIMove(MasterGame);
-    MasterGame.makeAIMove(AImove);
     MasterGame.printGame();
-    if(MasterGame.checkWin(false))
-    {
-     Serial.println("Computer wins");
-    }
   } else {  //A vaild move was not made, column was full
     Serial.print("Column #");
     Serial.print(keyPress);
     Serial.print(" is full\n");
     beep();
   }
+  return isGameOver;
+}
+
+void resetAll(Game &MasterGame, MotorControl &Motors, Sorter &sorter)
+{
+    sorter.sortPieces(MasterGame, Motors);
+    MasterGame.fullReset();
 }
 
 void beep(void)
