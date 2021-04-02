@@ -1,17 +1,14 @@
 #include <Keypad.h>
 #include "Game.hpp"
-#include "Solver.hpp"
 #include "MotorControl.hpp"
+#include "Solver.hpp"
 #include "Sorter.hpp"
 
-#define ONE_SEC 1000
+
+//#define ONE_SEC 1000
 #define buzzer 53
 
-// Connections to A4988
-#define DROP_DIR_PIN 11  // Direction
-#define DROP_STEP_PIN 12 // Step
-#define REL_DIR_PIN 23   // Direction
-#define REL_STEP_PIN 22  // Step
+
 
 #define ROWS 4 //Rows of keypad
 #define COLS 4 //Columns of keypad
@@ -38,7 +35,7 @@ void setup(){
 void loop(){
   char customKey = customKeypad.getKey();
 
-  processUserInput(customKey);
+  //processUserInput(customKey);
 
   delay(50);
 }
@@ -60,7 +57,7 @@ void processUserInput(char keyPress)
   }
   else if (keyPress == 'D') //Reset game
   {
-    resetGame(MasterGame, Motors, sorter);
+    resetAll(MasterGame, Motors, sorter);
   }
 }
 
@@ -101,7 +98,7 @@ bool playGame(Game &MasterGame, byte keyPress, MotorControl &Motors)
 
 void resetAll(Game &MasterGame, MotorControl &Motors, Sorter &sorter)
 {
-    sorter.sortPieces(MasterGame, Motors);
+    //sorter.sortPieces(MasterGame, Motors);
     MasterGame.fullReset();
 }
 

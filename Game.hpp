@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "MotorControl.hpp"
+//#include "MotorControl.hpp"
 
   /** 
    * A class storing a Connect 4 position.
@@ -22,9 +22,9 @@ public:
   public:
   Game(void)
   {
-    resetGame();
+    resetGame(); //Sets all game values to 0
   }
-  Game(const Game *G)
+  Game(const Game *G) //Copies given game
   {
     int i;
     for(i = 0; i < WIDTH; ++i)
@@ -35,21 +35,27 @@ public:
     numMoves = G->getNumMoves();
   }
 
+  //Return grid byte for given column
   byte getGridCol(int col) const
   {
     return grid[col];
   }
 
+  //Return mask byte for given column
   byte getMaskCol(int col) const 
   {
     return mask[col];
   }
 
+  //Return the number of moves that have been played
   byte getNumMoves(void) const 
   {
     return numMoves;
   }
 
+  //Checks a token can be dropped in a column, 
+  //a column can have 6 tokens,
+  //returns true if column has fewer than 6 tokens
   bool canPlay(byte col) const
   {
     return !(mask[col] & (1 << (HEIGHT - 1)));
@@ -216,6 +222,7 @@ public:
     return 0;
   }
 
+  //Checks if dropping a token in the given column will win the game
   bool isWinningColumn(int col, bool humanPlayer) const
   {
     Game G(this);
@@ -239,6 +246,8 @@ public:
     return 0;
   }
 
+  //Determines if droping a token in any column will produce a win
+  //If so it returns that column, otherwise it returns -1
   int findWinningColumn(bool humanPlayer)
   {
     int i;

@@ -3,7 +3,18 @@
 
 #include "Game.hpp"
 
-class MotorControl{
+// Connections to A4988
+#define DROP_DIR_PIN 11  // Direction
+#define DROP_STEP_PIN 12 // Step
+#define REL_DIR_PIN 23   // Direction
+#define REL_STEP_PIN 22  // Step
+#define SORTER_DIR_PIN 24
+#define SORTER_STEP_PIN 25
+#define MOVE 10
+#define MS_DELAY 5000
+#define ONE_SEC 1000
+
+class MotorControl {
 public:
   static const byte STEPS_PER_REV = 200; //Steps per 1 revolution of stepper motor
   static const byte DROP_MICRO_STEP = 8; //Microstep for dropper stepper motor
@@ -43,38 +54,58 @@ public:
 
   void moveSorterFlap(bool isPurple) //add real world values
   {
-    if(isPurple && !flapOnPurple)
+    if(isPurple)
     {
-      digitalWrite(DIR_PIN, HIGH);
-      for(int x = 0; x < STEPS_PER_REV*REL_MICRO_STEP/16; x++) {
-        digitalWrite(REL_STEP_PIN,HIGH); 
-        delayMicroseconds(REL_MS_DELAY); 
-        digitalWrite(REL_STEP_PIN,LOW); 
-        delayMicroseconds(REL_MS_DELAY); 
+      digitalWrite(SORTER_DIR_PIN, HIGH);
+      for(int x = 0; x < MOVE; x++) {
+        digitalWrite(SORTER_STEP_PIN,HIGH); 
+        delayMicroseconds(MS_DELAY); 
+        digitalWrite(SORTER_STEP_PIN,LOW); 
+        delayMicroseconds(MS_DELAY); 
       }
+      delay(1000);
+      digitalWrite(SORTER_DIR_PIN, LOW);
+      for(int x = 0; x < MOVE; x++) {
+        digitalWrite(SORTER_STEP_PIN,HIGH); 
+        delayMicroseconds(MS_DELAY); 
+        digitalWrite(SORTER_STEP_PIN,LOW); 
+        delayMicroseconds(MS_DELAY); 
+      }
+      
     } 
-    else if(!isPurple && flapOnPurple)
+    else if(!isPurple)
     {
-      digitalWrite(DIR_PIN, LOW);
-      for(int x = 0; x < STEPS_PER_REV*REL_MICRO_STEP/16; x++) {
-        digitalWrite(REL_STEP_PIN,HIGH); 
-        delayMicroseconds(REL_MS_DELAY); 
-        digitalWrite(REL_STEP_PIN,LOW); 
-        delayMicroseconds(REL_MS_DELAY); 
+      digitalWrite(SORTER_DIR_PIN, LOW);
+      for(int x = 0; x < MOVE; x++) {
+        digitalWrite(SORTER_STEP_PIN,HIGH); 
+        delayMicroseconds(MS_DELAY); 
+        digitalWrite(SORTER_STEP_PIN,LOW); 
+        delayMicroseconds(MS_DELAY); 
+      }
+      digitalWrite(SORTER_DIR_PIN, HIGH);
+      delay(1000);
+      for(int x = 0; x < MOVE; x++) {
+        digitalWrite(SORTER_STEP_PIN,HIGH); 
+        delayMicroseconds(MS_DELAY); 
+        digitalWrite(SORTER_STEP_PIN,LOW); 
+        delayMicroseconds(MS_DELAY); 
       }
     }
+    delay(1000);
+    
   }
 
   void resetGameboard(void)
   {
     //releaseGameboard();
-    moveDispenser('4');
+    moveDispenser(4);
   }
 
   MotorControl(){
     currentLoc = 0;
     currentStage = 0;
-    for(int i = 0; i < Game )
+    currentDirection = 0;
+    for(int i = 0; i < 7; ++i )
     {
       columnLocs[i] = COLUMN_DIFF*i;
     }
@@ -83,6 +114,7 @@ public:
 private:
   byte currentLoc;
   byte currentStage;
+  byte currentDirection;
   byte columnLocs[7] ;
 
   //Move dispencer to new location
@@ -164,6 +196,7 @@ private:
       digitalWrite(REL_STEP_PIN,LOW); 
       delayMicroseconds(REL_MS_DELAY); 
     }
+  }
 };
 
 #endif
