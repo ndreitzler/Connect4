@@ -1,14 +1,18 @@
+/*Nick Dreitzler
+ * Purpose: To run a game of connect 4 using and Arduino mega on custom 
+ * hardware.
+ * 
+ */
 #include <Keypad.h>
+
+#include "Connect4.h"
 #include "Game.hpp"
-#include "MotorControl.hpp"
+//#include "MotorControl.hpp"
 #include "Solver.hpp"
 #include "Sorter.hpp"
-
-
-//#define ONE_SEC 1000
-#define buzzer 53
-
-
+#include "CrankShaft.hpp"
+#include "Dropper.hpp"
+#include "SorterMotor.hpp"
 
 #define ROWS 4 //Rows of keypad
 #define COLS 4 //Columns of keypad
@@ -28,7 +32,13 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
 void setup(){
   Serial.begin(9600);
 
-  pinMode(buzzer, OUTPUT);
+  pinMode(CS_STEP_PIN, OUTPUT);
+  pinMode(CS_DIR_PIN, OUTPUT);
+  pinMode(DROP_STEP_PIN, OUTPUT);
+  pinMode(DROP_DIR_PIN, OUTPUT);
+  pinMode(SORTER_STEP_PIN, OUTPUT);
+  pinMode(SORTER_DIR_PIN, OUTPUT);
+
 
 }
   
@@ -43,25 +53,32 @@ void loop(){
 void processUserInput(char keyPress)
 {
   static Game MasterGame;
-  static MotorControl Motors;
+  //static MotorControl Motors;
   static Sorter sorter;
-  bool isGameOver = false;
+  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_MICRO_STEP, CS_US_DELAY);
+  static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_MICRO_STEP, DROP_US_DELAY);
+  static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_MICRO_STEP, SORTER_US_DELAY);
+  static bool isGameOver = false;
   
-  if(isGameOver)
+  //Process Input
+
+  if (keyPress == 'D') //Reset the game, release tokens and sort them, prepare for new game
+  {
+    resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor);
+  }
+  else if(isGameOver) //The Game is over don't process new game move
   {
     Serial.println("Game is over, hit D to reset");
+    beep();
   }
-  else if (keyPress >= '1' && keyPress <= '7') //Vaild move
+  else if (keyPress >= '1' && keyPress <= '7') //Vaild move, drop token in chosen column
   {
-    isGameOver = playGame(MasterGame, keyPress - '1', Motors);
+    isGameOver = playGame(MasterGame, dropper, keyPress - '1');
   }
-  else if (keyPress == 'D') //Reset game
-  {
-    resetAll(MasterGame, Motors, sorter);
-  }
+
 }
 
-bool playGame(Game &MasterGame, byte keyPress, MotorControl &Motors)
+bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress)
 {
   Solver solver;
   int AImove;
@@ -69,18 +86,18 @@ bool playGame(Game &MasterGame, byte keyPress, MotorControl &Motors)
 
   if(MasterGame.canPlay(keyPress)) // a vaild move was made
   {
-    Motors.dropToken(keyPress);
-    MasterGame.makeHumanMove(keyPress);
+    dropToken(dropper, keyPress); //Drop human token
+    MasterGame.makeHumanMove(keyPress); //Record human move
     //MasterGame.printGame();
-    if(MasterGame.checkWin(true))
+    if(MasterGame.checkWin(true)) //The human has won the game
     {
       isGameOver = true;
       Serial.println("Human wins");
-    } else {
-      AImove = solver.decideAIMove(MasterGame);
-      Motors.dropToken(AImove);
-      MasterGame.makeAIMove(AImove);
-      if(MasterGame.checkWin(false))
+    } else { //The game is not over and the AI must make a move
+      AImove = solver.decideAIMove(MasterGame); //Get AI move
+      dropToken(dropper, AImove); //Drop AI's token
+      MasterGame.makeAIMove(AImove); //Record AI move
+      if(MasterGame.checkWin(false)) //Check if the AI has won
       {
         isGameOver = true;
         Serial.println("Computer wins");
@@ -96,7 +113,14 @@ bool playGame(Game &MasterGame, byte keyPress, MotorControl &Motors)
   return isGameOver;
 }
 
-void resetAll(Game &MasterGame, MotorControl &Motors, Sorter &sorter)
+void dropToken(Dropper &dropper, byte keyPress)
+{
+  dropper.moveDispenser(keyPress);
+}
+
+
+//Reset the game. Release and sort pieces, clear game record, and move dropper to center column
+void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper &dropper, SorterMotor &sorterMotor)
 {
     //sorter.sortPieces(MasterGame, Motors);
     MasterGame.fullReset();
@@ -104,7 +128,7 @@ void resetAll(Game &MasterGame, MotorControl &Motors, Sorter &sorter)
 
 void beep(void)
 {
-    tone(buzzer, 1000);
+    tone(BUZZER, 1000);
     delay(10);
-    noTone(buzzer);
+    noTone(BUZZER);
 }

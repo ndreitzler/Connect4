@@ -1,6 +1,12 @@
+/*  Nick Dreitzler
+ *  Purpose: To store information on the gamestate of a Connect 4 game
+ * 
+ */
+
 #ifndef GAME_H
 #define GAME_H
 
+#include "Connect4.h"
 //#include "MotorControl.hpp"
 
   /** 
@@ -9,14 +15,14 @@
    */
 class Game{
 public:
-    static const byte WIDTH = 7; //Number of columns in the game board
-    static const byte HEIGHT = 6;//Number of rows in the game board
+    static const byte width = WIDTH; //Number of columns in the game board
+    static const byte height = HEIGHT;//Number of rows in the game board
 
   private:
   //For grid and mask, grid[0] is the first column, grid[1] is the second, etc
   //The first bit of each byte represents the first row, etc
-  byte grid[WIDTH]; //If the corresponding mask bit is set and the grid bit is 1, the player has a piece at that position 
-  byte mask[WIDTH]; //Each bit marks if a piece is in that position
+  byte grid[width]; //If the corresponding mask bit is set and the grid bit is 1, the player has a piece at that position 
+  byte mask[width]; //Each bit marks if a piece is in that position
   byte numMoves;
 
   public:
@@ -27,7 +33,7 @@ public:
   Game(const Game *G) //Copies given game
   {
     int i;
-    for(i = 0; i < WIDTH; ++i)
+    for(i = 0; i < width; ++i)
     {
       grid[i] = G->getGridCol(i);
       mask[i] = G->getMaskCol(i);
@@ -58,7 +64,7 @@ public:
   //returns true if column has fewer than 6 tokens
   bool canPlay(byte col) const
   {
-    return !(mask[col] & (1 << (HEIGHT - 1)));
+    return !(mask[col] & (1 << (height - 1)));
   }
   
   void makeHumanMove(int col)
@@ -79,7 +85,7 @@ public:
   void makeSolverMove(int col)
   {
     int i;
-    for(i = 0; i < Game::WIDTH; ++i)
+    for(i = 0; i < width; ++i)
     {
       grid[col] ^= mask[col];
       if(i == col)
@@ -98,10 +104,10 @@ public:
     byte m;
   
     // horizontal
-    for(r = 0; r < HEIGHT; ++r)
+    for(r = 0; r < height; ++r)
     {
       count = 0;
-      for(c = 0; c < WIDTH; ++c)
+      for(c = 0; c < width; ++c)
       {
         if((mask[c] & (1 << r)) && (((grid[c] & (1 << r)) >> r) == humanPlayer))
         {
@@ -121,10 +127,10 @@ public:
   
     //diagonal 1 /
     // bottom-left to top-right - upper diagonals
-    for(rowStart = 0; rowStart < WIDTH - 4; ++rowStart)
+    for(rowStart = 0; rowStart < width - 4; ++rowStart)
     {
       count = 0;
-      for(r = rowStart, c = 0; r < WIDTH && c < HEIGHT; ++r, ++c)
+      for(r = rowStart, c = 0; r < width && c < height; ++r, ++c)
       {
         if((mask[c] & (1 << r)) && (((grid[c] & (1 << r)) >> r) == humanPlayer))
           ++count;
@@ -139,10 +145,10 @@ public:
       }
     }
     // bottom-left to top-right - lower diagonals
-    for(colStart = 1; colStart <= WIDTH - 4; ++colStart)
+    for(colStart = 1; colStart <= width - 4; ++colStart)
     {
       count = 0;
-      for(r = 0, c = colStart; r < HEIGHT && c < WIDTH; ++r, ++c)
+      for(r = 0, c = colStart; r < height && c < width; ++r, ++c)
       {
         if((mask[c] & (1 << r)) && (((grid[c] & (1 << r)) >> r) == humanPlayer))
           ++count;
@@ -159,10 +165,10 @@ public:
   
     //diagonal 2 \
     // bottom-right to top-left - upper diagonals
-    for(rowStart = 0; rowStart < WIDTH - 4; ++rowStart)
+    for(rowStart = 0; rowStart < width - 4; ++rowStart)
     {
       count = 0;
-      for(r = rowStart, c = WIDTH - 1; r < HEIGHT && c >= 0; ++r, --c)
+      for(r = rowStart, c = width - 1; r < height && c >= 0; ++r, --c)
       {
         
         if((mask[c] & (1 << r)) && (((grid[c] & (1 << r)) >> r) == humanPlayer))
@@ -178,10 +184,10 @@ public:
       }
     }
     // bottom-right to top-left - lower diagonals
-    for(colStart = HEIGHT - 1; colStart >= 3; --colStart)
+    for(colStart = height - 1; colStart >= 3; --colStart)
     {
       count = 0;
-      for(r = 0, c = colStart; r < WIDTH && c >= 0; ++r, --c)
+      for(r = 0, c = colStart; r < width && c >= 0; ++r, --c)
       {
         if((mask[c] & (1 << r)) && (((grid[c] & (1 << r)) >> r) == humanPlayer))
           ++count;
@@ -204,7 +210,7 @@ public:
     }
 
     //vertical
-    for(c = 0; c < WIDTH; ++c)
+    for(c = 0; c < width; ++c)
     {
       //Only if checking for AI victory, makes it so grid bits are 1 for the AI
       if(!humanPlayer)
@@ -252,7 +258,7 @@ public:
   {
     int i;
 
-    for(i = 0; i < WIDTH; ++i)
+    for(i = 0; i < width; ++i)
     {
       if(canPlay(i) && isWinningColumn(i, humanPlayer))
         return i;
@@ -265,7 +271,7 @@ public:
   void resetGame(void)
   {
     int i;
-    for(i = 0; i < WIDTH; ++i)
+    for(i = 0; i < width; ++i)
     {
       grid[i] = 0;
       mask[i] = 0;
@@ -279,9 +285,9 @@ public:
   {
     int i, j;
   
-    for(i = HEIGHT - 1; i >= 0; --i)
+    for(i = height - 1; i >= 0; --i)
     {
-      for(j = 0; j < WIDTH; ++j)
+      for(j = 0; j < width; ++j)
       {
         if(mask[j] & (1 << i))
         {
