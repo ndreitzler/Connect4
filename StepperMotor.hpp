@@ -8,42 +8,46 @@
 class StepperMotor{
 protected: 
     static const byte stepsPerRevolution = 200;   
-    byte stepPin;
-    byte dirPin;
-    byte microStep;
-    int stepDelay;
+    byte stepPin;   //Arduino pin connected to A4988 driver step pin 
+    byte dirPin;    //Arduino pin connected to A4988 driver dir pin 
+    byte enPin;     //Arduino pin connected to A4988 driver en pin 
+    byte microStep; //microStep value on A4988 driver 
+    int stepDelay;  //Micro seconds between toggle of step pin
 
 public:
-    StepperMotor(byte sp, byte dp, byte ms, int sd)
+    StepperMotor(byte stepPin, byte dirPin, byte enPin, byte microStep, int stepDelay)
     {
-        stepPin = sp;
-        dirPin = dp;
-        microStep = ms;
-        stepDelay = sd;
-        digitalWrite(stepPin, LOW);
-        digitalWrite(dirPin, LOW);
+        this->stepPin = stepPin;
+        this->dirPin = dirPin;
+        this->microStep = microStep;
+        this->stepDelay = stepDelay;
+        digitalWrite(this->stepPin, LOW);
+        digitalWrite(this->dirPin, LOW);
     }
 
-    void setStepDelay(int sd)
+    void setStepDelay(int stepDelay)
     {
-        stepDelay = sd;
+        this->stepDelay = stepDelay;
     }
 
     //Move the attachted motor numSteps steps.
     //If clockwise is true the motor will step in the clockwise direction
     void moveMotor(int numSteps, bool clockwise)
     {
-        if(clockwise)
+        //Serial.println("enter move");
+        if(clockwise) // Set direction of motor
         {
             digitalWrite(dirPin, HIGH);
         } else {
             digitalWrite(dirPin, LOW);
         }
+        //Serial.println("enter for");
         for(int i = 0; i < numSteps*2; ++i)//A4988 causes the motor to step after a pulse, it takes 2 toggles for 1 pulse
         {
             digitalWrite(stepPin, !digitalRead(stepPin));
-            delay(stepDelay);
+            delayMicroseconds(stepDelay);
         }
+        //Serial.println("Leave move");
     }
   
 };

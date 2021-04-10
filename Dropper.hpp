@@ -1,5 +1,15 @@
 /* Nick Dreitzler
- * Purpose: class to contol the movements of droppers release of the game pieces into the gameboard
+ * Purpose: class to contol the movements of droppers release of the game pieces into the gameboard.
+ * Must give params to the constructor
+ * @Params for constructor: 
+ *    Stepper Motor Params:
+ *      stepPin: step pin connected to A4988
+ *      dirPin: direction pin connected to the A4988
+ *      enPin:  enable pin connected to the A4988
+ *      microStep: wired value for microstepping on A4988
+ *      stepDelay: step delay, the delay between each toggle of the step pin when rotating stepper motor
+ *    Dropper Params:
+ *      triggerPin: pin connected to normally open button used to calibrate dropper location
  */
 #ifndef DROPPER_H
 #define DROPPER_H
@@ -7,20 +17,24 @@
 #include "Connect4.h"
 #include "StepperMotor.hpp"
 
-#define COLUMN_DIFF 257
-#define BACK_COMP 8
+#define COLUMN_DIFF 257 //Number of steps between each column
+#define BACK_COMP 8 //Number of steps to compensate for backlash in threaded rod
+#define TRIGGER 500 //Value to be compared to the force sensor reading. When the force sensor read a value hight than this, the dropper will be zeroed
+#define INIT_VAL 150 //the number of steps need to be over the first column starting from the wall with the motors
 
 class Dropper : private StepperMotor{
 public:
-    Dropper(byte sp, byte dp, byte ms, int sd)
-        : StepperMotor{ sp, dp, ms, sd}
+    Dropper(byte stepPin, byte dirPin, byte enPin, byte microStep, int stepDelay, byte triggerPin) 
+        : StepperMotor{ stepPin, dirPin, enPin, microStep, stepDelay}
         {     
+            this->triggerPin = triggerPin;
             currentLoc = 0;
             currentDirection = 0;
-            for(int i = 0; i < 7; ++i )
+            for(int i = 0; i < 7; ++i )//set columnLoc values
             {
                 columnLocs[i] = COLUMN_DIFF*i;
             }
+            initDropper();
         }
 
   //Move dispencer to new location
@@ -28,7 +42,14 @@ public:
   {
     int i;
     int diff = columnLocs[currentLoc] - columnLocs[newLoc];
-    int backlashComp = 0;
+    byte backlashComp = 0;
+
+//    Serial.println("enter");
+//    Serial.println(diff);
+//    Serial.println(currentLoc);
+//    Serial.println(columnLocs[currentLoc]);
+//    Serial.println(newLoc);
+//    Serial.println(columnLocs[newLoc]);
     
     if(diff > 0) //new column is to the left of the current column
     {
@@ -38,7 +59,7 @@ public:
         //Serial.println("right to left");
       }
       //move motor
-      moveMotor(diff*microStep + backlashComp, true);
+      moveMotor(diff*microStep + backlashComp, CLOCK_WISE);
       currentDirection = 0;
     }
     else if (diff < 0) //new column is to the right of the current column
@@ -50,18 +71,37 @@ public:
       }
       diff = -diff;
       //move motor
-      moveMotor(diff*microStep + backlashComp, false);
+      moveMotor(diff*microStep + backlashComp, COUNTER_WISE);
       currentDirection = 1;
     }
 
     currentLoc = newLoc;
   }
-    
+
+  void initDropper(void)
+  {
+    Serial.println("init");
+//    while(analogRead(tiggerPin) < TRIGGER)
+//    {
+//      moveMotor(microStep, true);
+//    }
+    moveMotor(INIT_VAL, false);
+  }
+
+  void printCols(void) 
+  {
+    for(int i = 0; i < 7; ++i )
+    {
+      Serial.println(columnLocs[i]);
+    }
+  }
+
 private:
   //static const int COLUMN_DIFF = 257;//Number of steps between each column    
-  byte columnLocs[7];
+  int columnLocs[7];
   byte currentDirection;
   byte currentLoc;
+  byte triggerPin;
 
   
 

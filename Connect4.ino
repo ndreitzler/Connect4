@@ -1,6 +1,5 @@
 /*Nick Dreitzler
- * Purpose: To run a game of connect 4 using and Arduino mega on custom 
- * hardware.
+ * Purpose: To run a game of connect 4 using and Arduino mega on custom hardware.
  * 
  */
 #include <Keypad.h>
@@ -17,8 +16,8 @@
 #define ROWS 4 //Rows of keypad
 #define COLS 4 //Columns of keypad
 
-byte rowPins[ROWS] = {9, 8, 7, 6}; //row pins for the keypad
-byte colPins[COLS] = {5, 4, 3, 2}; //column pins for the keypad
+byte rowPins[ROWS] = {39, 41, 43, 45}; //row pins for the keypad
+byte colPins[COLS] = {47, 49, 51, 53}; //column pins for the keypad
 
 char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
@@ -28,6 +27,8 @@ char hexaKeys[ROWS][COLS] = {
 };
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);//Setup keypad
+
+//CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_MICRO_STEP, CS_US_DELAY);
 
 void setup(){
   Serial.begin(9600);
@@ -39,14 +40,20 @@ void setup(){
   pinMode(SORTER_STEP_PIN, OUTPUT);
   pinMode(SORTER_DIR_PIN, OUTPUT);
 
-
+  Serial.println("done setup");
 }
   
 void loop(){
+  static bool first = true;
   char customKey = customKeypad.getKey();
 
-  //processUserInput(customKey);
+//  if(customKey >= '0' && customKey <= '9')
+//  Serial.println(customKey);
 
+  if(customKey > ' ' || first)//Do first so that objects are initalized
+    processUserInput(customKey);
+
+  first = false;
   delay(50);
 }
 
@@ -55,9 +62,9 @@ void processUserInput(char keyPress)
   static Game MasterGame;
   //static MotorControl Motors;
   static Sorter sorter;
-  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_MICRO_STEP, CS_US_DELAY);
-  static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_MICRO_STEP, DROP_US_DELAY);
-  static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_MICRO_STEP, SORTER_US_DELAY);
+  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_EN_PIN, CS_MICRO_STEP, CS_US_DELAY);
+  static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_EN_PIN, DROP_MICRO_STEP, DROP_US_DELAY, A0);
+  static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_EN_PIN, SORTER_MICRO_STEP, SORTER_US_DELAY, SORTER_BUTTON);
   static bool isGameOver = false;
   
   //Process Input
@@ -65,6 +72,7 @@ void processUserInput(char keyPress)
   if (keyPress == 'D') //Reset the game, release tokens and sort them, prepare for new game
   {
     resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor);
+    isGameOver = false;
   }
   else if(isGameOver) //The Game is over don't process new game move
   {
@@ -73,9 +81,14 @@ void processUserInput(char keyPress)
   }
   else if (keyPress >= '1' && keyPress <= '7') //Vaild move, drop token in chosen column
   {
+    Serial.println(keyPress);
+    //dropper.printCols();
+    //dropper.moveDispenser(keyPress - '1');
+    //crankShaft.advanceRelease();
+    //crankShaft.moveMotor(200*16, false);
+    //sorterMotor.initSorter();
     isGameOver = playGame(MasterGame, dropper, keyPress - '1');
   }
-
 }
 
 bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress)
@@ -86,6 +99,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress)
 
   if(MasterGame.canPlay(keyPress)) // a vaild move was made
   {
+    Serial.println("playing");
     dropToken(dropper, keyPress); //Drop human token
     MasterGame.makeHumanMove(keyPress); //Record human move
     //MasterGame.printGame();
@@ -95,6 +109,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress)
       Serial.println("Human wins");
     } else { //The game is not over and the AI must make a move
       AImove = solver.decideAIMove(MasterGame); //Get AI move
+      delay(3000);
       dropToken(dropper, AImove); //Drop AI's token
       MasterGame.makeAIMove(AImove); //Record AI move
       if(MasterGame.checkWin(false)) //Check if the AI has won
@@ -122,8 +137,9 @@ void dropToken(Dropper &dropper, byte keyPress)
 //Reset the game. Release and sort pieces, clear game record, and move dropper to center column
 void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper &dropper, SorterMotor &sorterMotor)
 {
-    //sorter.sortPieces(MasterGame, Motors);
+    sorter.sortPieces(MasterGame, crankShaft, sorterMotor);
     MasterGame.fullReset();
+    
 }
 
 void beep(void)

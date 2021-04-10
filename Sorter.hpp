@@ -23,20 +23,22 @@ class Sorter
     unsigned char Current_MASK_Value, Current_POS_Value;
     
     crankShaft.advanceRelease(); //Open first column
+    delay(ONE_SEC);
 
-    for (i = 0; i < 7; i++) {
+    for (i = 6; i >= 0; --i) {
       byte grid = board.getGridCol(i);
       byte mask = board.getMaskCol(i);
       //printf("Drop Column #%d\n", i+1);         // Replace with what makes column actually drop
       Current_MASK_Value  = mask & BIT_SEL;  // Is there a piece
       Current_POS_Value = grid & BIT_SEL;  // Direction to move sorter
       while (Current_MASK_Value) {
-        sorterMotor.moveSorterFlap(Current_POS_Value);
+        sorterMotor.moveSorterFlap((bool)Current_POS_Value);
         BIT_SEL = BIT_SEL << 1;           //Shift the bit being selected left
         Current_MASK_Value  =  mask & BIT_SEL; // Is there a piece
         Current_POS_Value = grid & BIT_SEL;// Direction to move sorter
       } 
       crankShaft.advanceRelease(); //Open next column
+      delay(ONE_SEC);
       BIT_SEL = 0x01;
     }
     crankShaft.advanceRelease(); // Close last column
