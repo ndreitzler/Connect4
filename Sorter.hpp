@@ -26,6 +26,8 @@ class Sorter
     crankShaft.advanceRelease(); //Open first column
     delay(ONE_SEC);
 
+    sorterMotor.turnSorterMotorOn();
+
     for (i = 6; i >= 0; --i) {
       byte grid = board.getGridCol(i);
       byte mask = board.getMaskCol(i);
@@ -48,6 +50,7 @@ class Sorter
       BIT_SEL = 0x01;
     }
     crankShaft.advanceRelease(); // Close last column
+    sorterMotor.turnSorterMotorOff();
   }
 
 };

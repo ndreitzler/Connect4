@@ -1,5 +1,6 @@
 /* Nick Dreitzler
  * Purpose: class to contol the movements of droppers release of the game pieces into the gameboard.
+ * Micro Step 8, wired value for microstepping on A4988
  * Must give params to the constructor
  * @Params for constructor: 
  *    Stepper Motor Params:
@@ -24,8 +25,8 @@
 
 class Dropper : private StepperMotor{
 public:
-    Dropper(byte stepPin, byte dirPin, byte enPin, byte microStep, int stepDelay, byte triggerPin) 
-        : StepperMotor{ stepPin, dirPin, enPin, microStep, stepDelay}
+    Dropper(byte stepPin, byte dirPin, byte enPin, int stepDelay, byte triggerPin) 
+        : StepperMotor{ stepPin, dirPin, enPin, stepDelay}
         {     
             this->triggerPin = triggerPin;
             currentLoc = 0;
@@ -50,7 +51,7 @@ public:
 //    Serial.println(columnLocs[currentLoc]);
 //    Serial.println(newLoc);
 //    Serial.println(columnLocs[newLoc]);
-    
+    turnMotorOn();
     if(diff > 0) //new column is to the left of the current column
     {
       if(currentDirection == 1) //If changing directions compensate for backlash in threaded rod
@@ -59,7 +60,7 @@ public:
         //Serial.println("right to left");
       }
       //move motor
-      moveMotor(diff*microStep + backlashComp, CLOCK_WISE);
+      moveMotor(diff*DROP_MICRO_STEP + backlashComp, CLOCK_WISE);
       currentDirection = 0;
     }
     else if (diff < 0) //new column is to the right of the current column
@@ -71,21 +72,24 @@ public:
       }
       diff = -diff;
       //move motor
-      moveMotor(diff*microStep + backlashComp, COUNTER_WISE);
+      moveMotor(diff*DROP_MICRO_STEP + backlashComp, COUNTER_WISE);
       currentDirection = 1;
     }
+    turnMotorOff();
 
     currentLoc = newLoc;
   }
 
   void initDropper(void)
   {
+    turnMotorOn();
     Serial.println("init");
 //    while(analogRead(tiggerPin) < TRIGGER)
 //    {
 //      moveMotor(microStep, true);
 //    }
     moveMotor(INIT_VAL, false);
+    turnMotorOff();
   }
 
   void printCols(void) 
@@ -103,13 +107,6 @@ private:
   byte currentLoc;
   byte triggerPin;
 
-  
-
-//   //Drop token into gameboard
-//   void dropToken(bool isPurple) //If isPurple is true drop a purple token, otherwise drop a orange token 
-//   {
-//       //Drop Token
-//   }
 
 };
 

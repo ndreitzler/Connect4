@@ -14,11 +14,8 @@
 #include "SorterMotor.hpp"
 #include "Corkscrew.hpp"
 
-#define ROWS 4 //Rows of keypad
-#define COLS 4 //Columns of keypad
-
-byte rowPins[ROWS] = {39, 41, 43, 45}; //row pins for the keypad
-byte colPins[COLS] = {47, 49, 51, 53}; //column pins for the keypad
+byte rowPins[ROWS] = {ROW0, ROW1, ROW2, ROW3}; //row pins for the keypad
+byte colPins[COLS] = {COL0, COL1, COL2, COL3}; //column pins for the keypad
 
 char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
@@ -36,10 +33,23 @@ void setup(){
 
   pinMode(CS_STEP_PIN, OUTPUT);
   pinMode(CS_DIR_PIN, OUTPUT);
+  pinMode(CS_EN_PIN, OUTPUT);
   pinMode(DROP_STEP_PIN, OUTPUT);
   pinMode(DROP_DIR_PIN, OUTPUT);
+  pinMode(DROP_EN_PIN, OUTPUT);
   pinMode(SORTER_STEP_PIN, OUTPUT);
   pinMode(SORTER_DIR_PIN, OUTPUT);
+  pinMode(SORTER_EN_PIN, OUTPUT);
+  pinMode(CORK_PURPLE_STEP_PIN, OUTPUT);
+  pinMode(CORK_PURPLE_DIR_PIN, OUTPUT);
+  pinMode(CORK_PURPLE_EN_PIN, OUTPUT);
+  pinMode(CORK_ORANGE_STEP_PIN, OUTPUT);
+  pinMode(CORK_ORANGE_DIR_PIN, OUTPUT);
+  pinMode(CORK_ORANGE_EN_PIN, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  pinMode(DROP_TRIGGER_PIN, INPUT);
+  pinMode(SORTER_BUTTON, INPUT);
 
   Serial.println("done setup");
 }
@@ -63,11 +73,11 @@ void processUserInput(char keyPress)
   static Game MasterGame;
   //static MotorControl Motors;
   static Sorter sorter;
-  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_EN_PIN, CS_MICRO_STEP, CS_US_DELAY);
-  static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_EN_PIN, DROP_MICRO_STEP, DROP_US_DELAY, A0);
-  static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_EN_PIN, SORTER_MICRO_STEP, SORTER_US_DELAY, SORTER_BUTTON);
-  static Corkscrew purpleCS(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_MICRO_STEP, CORK_PURPLE_US_DELAY);
-  static Corkscrew orangeCS(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_MICRO_STEP, CORK_ORANGE_US_DELAY);
+  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_EN_PIN, CS_UDELAY);
+  static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_EN_PIN, DROP_UDELAY, DROP_TRIGGER_PIN);
+  static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_EN_PIN, SORTER_UDELAY, SORTER_BUTTON);
+  static Corkscrew purpleCS(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_UDELAY);
+  static Corkscrew orangeCS(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_UDELAY);
   static bool isGameOver = false;
   
   //Process Input
