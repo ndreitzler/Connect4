@@ -11,6 +11,9 @@
  *      stepDelay: step delay, the delay between each toggle of the step pin when rotating stepper motor
  *    Dropper Params:
  *      triggerPin: pin connected to normally open button used to calibrate dropper location
+ * 
+ * @Dependencies
+ *      StepperMotor.hpp
  */
 #ifndef DROPPER_H
 #define DROPPER_H
@@ -21,7 +24,8 @@
 #define COLUMN_DIFF 257 //Number of steps between each column
 #define BACK_COMP 8 //Number of steps to compensate for backlash in threaded rod
 #define TRIGGER 500 //Value to be compared to the force sensor reading. When the force sensor read a value hight than this, the dropper will be zeroed
-#define INIT_VAL 150 //the number of steps need to be over the first column starting from the wall with the motors
+#define INIT_VAL 200 //the number of steps need to be over the first column starting from the wall with the motors
+#define INIT_UDELAY 200 //To make the motor move slower during init. This helps prevent damage to the game body
 
 class Dropper : private StepperMotor{
 public:
@@ -29,13 +33,13 @@ public:
         : StepperMotor{ stepPin, dirPin, enPin, stepDelay}
         {     
             this->triggerPin = triggerPin;
-            currentLoc = 0;
-            currentDirection = 0;
+            currentLoc = 6;
+            currentDirection = 1;
             for(int i = 0; i < 7; ++i )//set columnLoc values
             {
                 columnLocs[i] = COLUMN_DIFF*i;
             }
-            initDropper();
+            initMotor();
         }
 
   //Move dispencer to new location
@@ -80,15 +84,17 @@ public:
     currentLoc = newLoc;
   }
 
-  void initDropper(void)
+  void initMotor(void)
   {
     turnMotorOn();
+    setStepDelay(INIT_UDELAY);
     Serial.println("init");
-//    while(analogRead(tiggerPin) < TRIGGER)
-//    {
-//      moveMotor(microStep, true);
-//    }
-    moveMotor(INIT_VAL, false);
+    while(digitalRead(triggerPin) == LOW)
+    {
+      moveMotor(DROP_MICRO_STEP, COUNTER_WISE);
+    }
+    moveMotor(INIT_VAL, CLOCK_WISE);
+    setStepDelay(DROP_UDELAY);
     turnMotorOff();
   }
 

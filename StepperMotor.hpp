@@ -17,6 +17,7 @@ public:
     {
         this->stepPin = stepPin;
         this->dirPin = dirPin;
+        this->enPin = enPin;
         //this->microStep = microStep;
         this->stepDelay = stepDelay;
         isOn = false;
@@ -30,34 +31,7 @@ public:
         this->stepDelay = stepDelay;
     }
 
-protected:
-    static const byte stepsPerRevolution = 200;   
-    //byte microStep; //microStep value on A4988 driver 
-    
-    //Move the attachted motor numSteps steps.
-    //If clockwise is true the motor will step in the clockwise direction
-    inline void moveMotor(int numSteps, bool clockwise)
-    {
-        //Serial.println("enter move");
-        if(isOn)
-        {
-            if(clockwise) // Set direction of motor
-            {
-                digitalWrite(dirPin, HIGH);
-            } else {
-                digitalWrite(dirPin, LOW);
-            }
-            //Serial.println("enter for");
-            for(int i = 0; i < numSteps*2; ++i)//A4988 causes the motor to step after a pulse, it takes 2 toggles for 1 pulse
-            {
-                digitalWrite(stepPin, !digitalRead(stepPin));
-                delayMicroseconds(stepDelay);
-            }
-            //Serial.println("Leave move");
-        } else {
-            Serial.println("Motor off");
-        }
-    }
+    virtual void initMotor() = 0;
 
     //enable stepper motor
     inline void turnMotorOn(void)
@@ -72,7 +46,36 @@ protected:
         isOn = false;
         digitalWrite(enPin, HIGH);
     }
-  
+
+protected:
+    static const byte stepsPerRevolution = 200;   
+    
+    //Move the attachted motor numSteps steps.
+    //If clockwise is true the motor will step in the clockwise direction
+    inline void moveMotor(int numSteps, bool clockwise)
+    {
+        if(isOn)
+        {
+            if(clockwise) // Set direction of motor
+            {
+//              Serial.println("high");
+              digitalWrite(dirPin, HIGH);
+            } else {
+//              Serial.println("low");
+              digitalWrite(dirPin, LOW);
+            }
+            //digitalWrite(dirPin, HIGH);
+            //Serial.println("enter for");
+            for(int i = 0; i < numSteps*2; ++i)//A4988 causes the motor to step after a pulse, it takes 2 toggles for 1 pulse
+            {
+                digitalWrite(stepPin, !digitalRead(stepPin));
+                delayMicroseconds(stepDelay);
+            }
+            //Serial.println("Leave move");
+        } else {
+            Serial.println("Motor off");
+        }
+    }
 private:
     bool isOn;
     byte stepPin;   //Arduino pin connected to A4988 driver step pin 

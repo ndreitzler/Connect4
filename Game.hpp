@@ -261,9 +261,14 @@ public:
     for(i = 0; i < width; ++i)
     {
       if(canPlay(i) && isWinningColumn(i, humanPlayer))
-        return i;
+      {
+          Serial.print("Winning ");
+          Serial.print(i);
+          Serial.println("");
+          return i;
+      }
     }
-    return -1;
+    return 0;
   }
 
  

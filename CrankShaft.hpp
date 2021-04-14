@@ -8,41 +8,69 @@
  *      dirPin: direction pin connected to the A4988
  *      enPin:  enable pin connected to the A4988
  *      stepDelay: step delay, the delay between each toggle of the step pin when rotating stepper motor
+ * 
+ * @Dependencies
+ *      StepperMotor.hpp
  */
-
 #ifndef CRANK_SHAFT_H
 #define CRANK_SHAFT_H
 
 #include "Connect4.h"
 #include "StepperMotor.hpp"
 
-class CrankShaft : private StepperMotor{
-private: 
-byte currentStage;
+//#define CS_INIT_VAL 198
+#define CS_INIT_VAL 280
 
+class CrankShaft : public StepperMotor{
 public:
-    CrankShaft( byte stepPin, byte dirPin, byte enPin, int stepDelay) 
+    CrankShaft( byte stepPin, byte dirPin, byte enPin, int stepDelay, byte initPin) 
         : StepperMotor{ stepPin, dirPin, enPin, stepDelay}
-        { currentStage = 0; }
+        { 
+          this->initPin = initPin;
+          currentStage = 0;
+          initMotor();
+        }
 
-
-  void advanceRelease(void) //advance the stage of the crankshaft, by advance I mean close the last column and open the next
+  //advance the stage of the crankshaft, by advance I mean close the last column and open the next
+  //Motor will not be turned on in this fuction, this must happen outside the funtion
+  void advanceRelease(void) 
   {
-    turnMotorOn();
+    //turnMotorOn();
     // Serial.print("cs is ");
     // Serial.print(currentStage);
     // Serial.print("\n");
-    if(currentStage == 0 || currentStage == WIDTH + 1) 
+    if(currentStage == 0) 
     { 
         // Serial.println("cs is 0 or 9");
-        moveMotor(stepsPerRevolution*CS_MICRO_STEP/2/(WIDTH + 1), false);//Make a half advancment, either open the first column, or close the last
+        moveMotor(stepsPerRevolution*CS_MICRO_STEP/2/(WIDTH + 1)+CS_INIT_VAL, COUNTER_WISE);//Make a half advancment, either open the first column, or close the last
+    }
+    else if(currentStage == WIDTH + 1)
+    {
+      initMotor();
     } else {
         // Serial.println("cs is 1 to 8");
-        moveMotor(stepsPerRevolution*CS_MICRO_STEP/(WIDTH + 1), false); //Make a full advancment
+        moveMotor(stepsPerRevolution*CS_MICRO_STEP/(WIDTH + 1), COUNTER_WISE); //Make a full advancment
     }
     currentStage = (currentStage + 1) % (WIDTH+2);//% 9 for a normal sized gameboard
+    //turnMotorOff();
+  }
+
+  //Calibrate motor position
+  void initMotor(void)
+  {
+    turnMotorOn();
+    //Serial.println("init");
+    while(digitalRead(initPin) == LOW)
+    {
+      moveMotor(CS_MICRO_STEP/2, COUNTER_WISE);
+    }
+    //moveMotor(CS_INIT_VAL, COUNTER_WISE);
     turnMotorOff();
   }
+
+private: 
+  byte currentStage;
+  byte initPin;
 };
 
 #endif

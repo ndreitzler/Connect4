@@ -1,6 +1,12 @@
 /* Stephen Frost and Nick Dreitzler
  * Purpose: To sort the pieces that are currently in the gameboard and return them to the feed columns
  *
+ * @Dependencies
+ *      Game.hpp
+ *      CrankShaft.hpp
+ *      SorterMotor.hpp
+ *      Corkscrew.hpp
+ *      
  */
 
 #ifndef SORTER_H
@@ -15,18 +21,21 @@
 class Sorter 
 {
  public:
-  void sortPieces(Game &board, CrankShaft &crankShaft, SorterMotor &sorterMotor, Corkscrew &purpleCS, Corkscrew &orangeCS)
+  void sortPieces(Game &board, CrankShaft &crankShaft, SorterMotor &sorterMotor, Corkscrew &purpleCork, Corkscrew &orangeCork)
   {
 
     // Var initializations
     unsigned char BIT_SEL = 0x01;     // Start at lowest order bit
     int i;                        // Column character select
     unsigned char Current_MASK_Value, Current_POS_Value;
-    
+
+    sorterMotor.turnMotorOn();
+    sorterMotor.initMotor();
+    delay(50);
+
+    crankShaft.turnMotorOn();
     crankShaft.advanceRelease(); //Open first column
     delay(ONE_SEC);
-
-    sorterMotor.turnSorterMotorOn();
 
     for (i = 6; i >= 0; --i) {
       byte grid = board.getGridCol(i);
@@ -37,9 +46,9 @@ class Sorter
         sorterMotor.moveSorterFlap((bool)Current_POS_Value);
         if(Current_POS_Value)
         {
-          orangeCS.moveUpOne();
+          orangeCork.moveUpOne();
         } else {
-          purpleCS.moveUpOne();
+          purpleCork.moveUpOne();
         }
         BIT_SEL = BIT_SEL << 1;           //Shift the bit being selected left
         Current_MASK_Value  =  mask & BIT_SEL; // Is there a piece
@@ -50,7 +59,8 @@ class Sorter
       BIT_SEL = 0x01;
     }
     crankShaft.advanceRelease(); // Close last column
-    sorterMotor.turnSorterMotorOff();
+    sorterMotor.turnMotorOff();
+    crankShaft.turnMotorOff();
   }
 
 };

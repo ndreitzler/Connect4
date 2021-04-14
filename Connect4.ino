@@ -6,7 +6,6 @@
 
 #include "Connect4.h"
 #include "Game.hpp"
-//#include "MotorControl.hpp"
 #include "Solver.hpp"
 #include "Sorter.hpp"
 #include "CrankShaft.hpp"
@@ -25,8 +24,6 @@ char hexaKeys[ROWS][COLS] = {
 };
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);//Setup keypad
-
-//CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_MICRO_STEP, CS_US_DELAY);
 
 void setup(){
   Serial.begin(9600);
@@ -48,6 +45,7 @@ void setup(){
   pinMode(CORK_ORANGE_EN_PIN, OUTPUT);
   pinMode(BUZZER, OUTPUT);
 
+  pinMode(CS_BUTTON_PIN, INPUT); 
   pinMode(DROP_TRIGGER_PIN, INPUT);
   pinMode(SORTER_BUTTON, INPUT);
 
@@ -58,12 +56,12 @@ void loop(){
   static bool first = true;
   char customKey = customKeypad.getKey();
 
-//  if(customKey >= '0' && customKey <= '9')
-//  Serial.println(customKey);
-
-  if(customKey > ' ' || first)//Do first so that objects are initalized
+  if(customKey >= ' ' || first)//Do first so that objects are initalized
+  {
+    Serial.println(customKey);
     processUserInput(customKey);
-
+  }
+    
   first = false;
   delay(50);
 }
@@ -71,35 +69,63 @@ void loop(){
 void processUserInput(char keyPress)
 {
   static Game MasterGame;
-  //static MotorControl Motors;
   static Sorter sorter;
-  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_EN_PIN, CS_UDELAY);
+  static CrankShaft crankShaft(CS_STEP_PIN, CS_DIR_PIN, CS_EN_PIN, CS_UDELAY, CS_BUTTON_PIN);
   static Dropper dropper(DROP_STEP_PIN, DROP_DIR_PIN, DROP_EN_PIN, DROP_UDELAY, DROP_TRIGGER_PIN);
   static SorterMotor sorterMotor(SORTER_STEP_PIN, SORTER_DIR_PIN, SORTER_EN_PIN, SORTER_UDELAY, SORTER_BUTTON);
-  static Corkscrew purpleCS(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_UDELAY);
-  static Corkscrew orangeCS(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_UDELAY);
+  static Corkscrew purpleCork(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_UDELAY);
+  static Corkscrew orangeCork(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_UDELAY);
   static bool isGameOver = false;
-  
+
+  //Serial.println(keyPress);
+  //purpleCork.moveUpOne();
+  //purpleCork.dropToBottom();
+//  if(isGameOver)
+//    dropper.moveDispenser(keyPress - '1');
+//   isGameOver = true;
   //Process Input
 
-  if (keyPress == 'D') //Reset the game, release tokens and sort them, prepare for new game
-  {
-    resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor, purpleCS, orangeCS);
-    isGameOver = false;
-  }
-  else if(isGameOver) //The Game is over don't process new game move
-  {
-    Serial.println("Game is over, hit D to reset");
-    beep();
-  }
-  else if (keyPress >= '1' && keyPress <= '7') //Vaild move, drop token in chosen column
-  {
-    //Serial.println(keyPress);
-    isGameOver = playGame(MasterGame, dropper, keyPress - '1', purpleCS, orangeCS);
+   if(isGameOver) //The Game is over don't process new game move
+   {
+     Serial.println("Game is over, hit D to reset");
+     beep();
+   } else {
+    switch (keyPress)
+    {
+    case 'D':
+      resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor, purpleCork, orangeCork);
+      isGameOver = false;
+      break;
+    case 'A':
+      for(int i = 0; i < 10; ++i)
+        purpleCork.moveUpOne();
+      break;
+    case 'B':
+      purpleCork.moveUpOne();
+      break;
+    case '*'
+      for(int i = 0; i < 10; ++i)
+        orangeCork.moveUpOne();
+      break;
+    case '0':
+      purpleCork.moveUpOne();
+      break;
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+      isGameOver = playGame(MasterGame, dropper, keyPress - '1', purpleCork, orangeCork);
+      break;
+    default:
+      beep();
+      break;
   }
 }
 
-bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purpleCS, Corkscrew &orangeCS)
+bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purpleCork, Corkscrew &orangeCork)
 {
   Solver solver;
   int AImove;
@@ -108,7 +134,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purp
   if(MasterGame.canPlay(keyPress)) // a vaild move was made
   {
     Serial.println("playing");
-    dropToken(dropper, keyPress, orangeCS); //Drop human token
+    dropToken(dropper, keyPress, orangeCork); //Drop human token
     MasterGame.makeHumanMove(keyPress); //Record human move
     //MasterGame.printGame();
     if(MasterGame.checkWin(true)) //The human has won the game
@@ -118,7 +144,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purp
     } else { //The game is not over and the AI must make a move
       AImove = solver.decideAIMove(MasterGame); //Get AI move
       delay(3000);
-      dropToken(dropper, AImove, purpleCS); //Drop AI's token
+      dropToken(dropper, AImove, purpleCork); //Drop AI's token
       MasterGame.makeAIMove(AImove); //Record AI move
       if(MasterGame.checkWin(false)) //Check if the AI has won
       {
@@ -144,11 +170,11 @@ void dropToken(Dropper &dropper, byte keyPress, Corkscrew &color)
 
 
 //Reset the game. Release and sort pieces, clear game record, and move dropper to center column
-void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper &dropper, SorterMotor &sorterMotor, Corkscrew &purpleCS, Corkscrew &orangeCS)
+void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper &dropper, SorterMotor &sorterMotor, Corkscrew &purpleCork, Corkscrew &orangeCork)
 {
-    purpleCS.dropToBottom();
-    orangeCS.dropToBottom();
-    sorter.sortPieces(MasterGame, crankShaft, sorterMotor, purpleCS, orangeCS);
+    purpleCork.dropToBottom();
+    orangeCork.dropToBottom();
+    sorter.sortPieces(MasterGame, crankShaft, sorterMotor, purpleCork, orangeCork);
     MasterGame.fullReset();
     
 }
@@ -156,6 +182,6 @@ void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper 
 void beep(void)
 {
     tone(BUZZER, 1000);
-    delay(10);
+    delay(100);
     noTone(BUZZER);
 }
