@@ -67,6 +67,10 @@ public:
     return !(mask[col] & (1 << (height - 1)));
   }
   
+  /* Human moves need to append a 1 to the end of the corresponding grid column.
+   * Append 1 to most significant side of the mask column, 0011 becomes 0111.
+   * Does not check if the column is full.
+   */
   void makeHumanMove(int col)
   {
     grid[col] ^= mask[col];
@@ -75,27 +79,20 @@ public:
     ++numMoves;
   }
   
+  /* AI moves do not need to change grid
+   * Append 1 to most significant side of the mask column, 0011 becomes 0111.
+   * Does not check if the column is full.
+   */
   void makeAIMove(int col)
   {
     mask[col] = (mask[col] << 1) + 1;//Shift mask over by 1 to signify new AI token
     ++numMoves;
-    //Serial.println(mask[col], HEX);
-  }
-
-  void makeSolverMove(int col)
-  {
-    int i;
-    for(i = 0; i < width; ++i)
-    {
-      grid[col] ^= mask[col];
-      if(i == col)
-        mask[col] = (mask[col] << 1) + 1;
-    }
-    ++numMoves;
   }
   
-  /*Check for 4 in a row*/
-  bool checkWin(bool humanPlayer) //humanPlayer = true if human player, = false if AI
+  /* Check for 4 in a row for either the human or the AI
+   * humanPlayer = true if human player, = false if AI
+   */
+  bool checkWin(bool humanPlayer) 
   {
     int r, c;
     int rowStart, colStart;
@@ -252,19 +249,20 @@ public:
     return 0;
   }
 
-  //Determines if droping a token in any column will produce a win
-  //If so it returns that column, otherwise it returns -1
+  /* Determines if droping a token in any column will produce a win.
+   * If so it returns that column, otherwise it returns -1.
+   */
   int findWinningColumn(bool humanPlayer)
   {
     int i;
 
     for(i = 0; i < width; ++i)
     {
-      if(canPlay(i) && isWinningColumn(i, humanPlayer))
+      if(canPlay(i) && isWinningColumn(i, humanPlayer))//the human can play here and win
       {
-          Serial.print("Winning ");
-          Serial.print(i);
-          Serial.println("");
+          // Serial.print("Winning ");
+          // Serial.print(i);
+          // Serial.println("");
           return i;
       }
     }
@@ -311,6 +309,7 @@ public:
     Serial.print("\n");  
   }
 
+  //Reset the game and print the clear board
   void fullReset()
   {
     resetGame();

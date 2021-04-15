@@ -46,9 +46,9 @@ class Sorter
         sorterMotor.moveSorterFlap((bool)Current_POS_Value);
         if(Current_POS_Value)
         {
-          orangeCork.moveUpOne();
+          orangeCork.loadUpOne();
         } else {
-          purpleCork.moveUpOne();
+          purpleCork.loadUpOne();
         }
         BIT_SEL = BIT_SEL << 1;           //Shift the bit being selected left
         Current_MASK_Value  =  mask & BIT_SEL; // Is there a piece

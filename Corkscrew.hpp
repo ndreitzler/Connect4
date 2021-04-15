@@ -33,9 +33,26 @@ class Corkscrew : public StepperMotor {
     {
       ++distanceFromBottom;
       turnMotorOn();
-      moveMotor(CORK_PURPLE_MICRO_STEP * stepsPerRevolution, COUNTER_WISE);
+      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution), COUNTER_WISE);
       turnMotorOff();
     }
+
+    //Move tokens up one slot in the corkscrew
+    void loadUpOne(void)
+    {
+      turnMotorOn();
+      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/4, COUNTER_WISE);
+      //Jiggle for stuck tokens
+      for(int i = 0; i < 1; ++i)
+      {
+        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/8, CLOCK_WISE);
+        delay(100);
+        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/8, COUNTER_WISE);
+      }
+      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution*3)/4, COUNTER_WISE);
+      turnMotorOff();
+    }
+    
     //Move tokens up one slot in the corkscrew
     void debugUp(byte num)
     {
