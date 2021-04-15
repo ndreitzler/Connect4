@@ -43,7 +43,7 @@ public:
         }
 
   //Move dispencer to new location
-  void moveDispenser(byte newLoc)
+  void moveDropper(byte newLoc)
   {
     int i;
     int diff = columnLocs[currentLoc] - columnLocs[newLoc];

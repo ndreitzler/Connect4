@@ -1,7 +1,7 @@
 /*Nick Dreitzler
- * Purpose: To run a game of connect 4 using and Arduino mega on custom hardware.
- * 
- */
+   Purpose: To run a game of connect 4 using and Arduino mega on custom hardware.
+
+*/
 #include <Keypad.h>
 
 #include "Connect4.h"
@@ -25,7 +25,7 @@ char hexaKeys[ROWS][COLS] = {
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);//Setup keypad
 
-void setup(){
+void setup() {
   Serial.begin(9600);
 
   pinMode(CS_STEP_PIN, OUTPUT);
@@ -45,23 +45,23 @@ void setup(){
   pinMode(CORK_ORANGE_EN_PIN, OUTPUT);
   pinMode(BUZZER, OUTPUT);
 
-  pinMode(CS_BUTTON_PIN, INPUT); 
+  pinMode(CS_BUTTON_PIN, INPUT);
   pinMode(DROP_TRIGGER_PIN, INPUT);
   pinMode(SORTER_BUTTON, INPUT);
 
   Serial.println("done setup");
 }
-  
-void loop(){
+
+void loop() {
   static bool first = true;
   char customKey = customKeypad.getKey();
 
-  if(customKey >= ' ' || first)//Do first so that objects are initalized
+  if (customKey >= ' ' || first) //Do first so that objects are initalized
   {
     Serial.println(customKey);
     processUserInput(customKey);
   }
-    
+
   first = false;
   delay(50);
 }
@@ -76,68 +76,98 @@ void processUserInput(char keyPress)
   static Corkscrew purpleCork(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_UDELAY);
   static Corkscrew orangeCork(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_UDELAY);
   static bool isGameOver = false;
+  static bool first = true;
+  byte AImove;
 
   //Serial.println(keyPress);
   //purpleCork.moveUpOne();
   //purpleCork.dropToBottom();
-//  if(isGameOver)
-//    dropper.moveDispenser(keyPress - '1');
-//   isGameOver = true;
+  //  if(isGameOver)
+  //    dropper.moveDispenser(keyPress - '1');
+  //   isGameOver = true;
   //Process Input
 
-   if(isGameOver) //The Game is over don't process new game move
-   {
-     Serial.println("Game is over, hit D to reset");
-     beep();
-   } else {
+  if(first)
+  {
+    if (keyPress == '1')
+    {
+      first = false;
+      return;
+    }
+    else if(keyPress == '2')
+    {
+      randomSeed(analogRead(A1));
+      AImove = random(3,6); //AI will pick a random column between 3,4,5
+      dropToken(dropper, AImove, purpleCork); //Drop AI's token
+      MasterGame.makeAIMove(AImove); //Record AI move
+      first = false;
+    } else {
+      beep();
+    }
+  }
+  else if (isGameOver && keyPress != '*') //The Game is over don't process new game move
+  {
+    Serial.println("Game is over, hit * to reset");
+    beep();
+  } else {
     switch (keyPress)
     {
-    case 'D':
-      resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor, purpleCork, orangeCork);
-      isGameOver = false;
-      break;
-    case 'A':
-      for(int i = 0; i < 10; ++i)
-        purpleCork.moveUpOne();
-      break;
-    case 'B':
-      purpleCork.moveUpOne();
-      break;
-    case '*'
-      for(int i = 0; i < 10; ++i)
-        orangeCork.moveUpOne();
-      break;
-    case '0':
-      purpleCork.moveUpOne();
-      break;
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-      isGameOver = playGame(MasterGame, dropper, keyPress - '1', purpleCork, orangeCork);
-      break;
-    default:
-      beep();
-      break;
+      case '*':
+        resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor, purpleCork, orangeCork);
+        isGameOver = false;
+        break;
+      case 'A':
+        purpleCork.debugUp(10);
+        break;
+      case 'B':
+        purpleCork.debugUp(1);
+        break;
+      case 'C':
+        orangeCork.debugUp(10);
+        break;
+      case 'D':
+        orangeCork.debugUp(1);
+        break;
+      case '1': //if key press is 1-7 play game
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        isGameOver = playGame(MasterGame, dropper, keyPress - '1', purpleCork, orangeCork);
+        break;
+      default:
+        beep();
+        break;
+    }
   }
 }
 
+/* Play a round of the connect 4 game.
+ * Check if the human can play the selected column if not beep and leave function.
+ * Move dropper to chosen column.
+ * Rotate orange corkscrew to drop token for the human.
+ * Check if the game is over, if so return true to signify this.
+ * Calculate move for the AI.
+ * Move dropper to the selected column.
+ * Rotate purple corkscrew to drop AI token.
+ * Check if the game is over, if so return true to signify this.
+ * If the game is not over return false.
+ */
 bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purpleCork, Corkscrew &orangeCork)
 {
   Solver solver;
-  int AImove;
+  byte AImove;
   bool isGameOver = false;
 
-  if(MasterGame.canPlay(keyPress)) // a vaild move was made
+  if (MasterGame.canPlay(keyPress)) // a vaild move was made
   {
     Serial.println("playing");
     dropToken(dropper, keyPress, orangeCork); //Drop human token
     MasterGame.makeHumanMove(keyPress); //Record human move
     //MasterGame.printGame();
-    if(MasterGame.checkWin(true)) //The human has won the game
+    if (MasterGame.checkWin(true)) //The human has won the game
     {
       isGameOver = true;
       Serial.println("Human wins");
@@ -146,7 +176,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purp
       delay(3000);
       dropToken(dropper, AImove, purpleCork); //Drop AI's token
       MasterGame.makeAIMove(AImove); //Record AI move
-      if(MasterGame.checkWin(false)) //Check if the AI has won
+      if (MasterGame.checkWin(false)) //Check if the AI has won
       {
         isGameOver = true;
         Serial.println("Computer wins");
@@ -162,26 +192,28 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purp
   return isGameOver;
 }
 
-void dropToken(Dropper &dropper, byte keyPress, Corkscrew &color)
+
+//Move dropper to given column and then rotate corkscrew to drop a token of the given color
+void dropToken(Dropper &dropper, byte column, Corkscrew &color)
 {
-  dropper.moveDispenser(keyPress);
+  dropper.moveDropper(column);
   color.moveUpOne();
 }
-
 
 //Reset the game. Release and sort pieces, clear game record, and move dropper to center column
 void resetAll(Game &MasterGame, Sorter &sorter, CrankShaft &crankShaft, Dropper &dropper, SorterMotor &sorterMotor, Corkscrew &purpleCork, Corkscrew &orangeCork)
 {
-    purpleCork.dropToBottom();
-    orangeCork.dropToBottom();
-    sorter.sortPieces(MasterGame, crankShaft, sorterMotor, purpleCork, orangeCork);
-    MasterGame.fullReset();
-    
+  purpleCork.dropToBottom();
+  orangeCork.dropToBottom();
+  sorter.sortPieces(MasterGame, crankShaft, sorterMotor, purpleCork, orangeCork);
+  MasterGame.fullReset();
+
 }
 
+//This beeps
 void beep(void)
 {
-    tone(BUZZER, 1000);
-    delay(100);
-    noTone(BUZZER);
+  tone(BUZZER, 1000);
+  delay(100);
+  noTone(BUZZER);
 }
