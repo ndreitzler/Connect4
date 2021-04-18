@@ -62,7 +62,7 @@ public:
     //Serial.println("init");
     while(digitalRead(initPin) == LOW)
     {
-      moveMotor(CS_MICRO_STEP/2, COUNTER_WISE);
+      moveMotor(CS_MICRO_STEP/4, COUNTER_WISE);
     }
     //moveMotor(CS_INIT_VAL, COUNTER_WISE);
     turnMotorOff();

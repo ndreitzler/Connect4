@@ -174,7 +174,7 @@ bool playGame(Game &MasterGame, Dropper &dropper, byte keyPress, Corkscrew &purp
       Serial.println("Human wins");
     } else { //The game is not over and the AI must make a move
       AImove = solver.decideAIMove(MasterGame); //Get AI move
-      delay(3000);
+      delay(ONE_SEC);
       dropToken(dropper, AImove, purpleCork); //Drop AI's token
       MasterGame.makeAIMove(AImove); //Record AI move
       if (MasterGame.checkWin(false)) //Check if the AI has won

@@ -53,9 +53,9 @@ public:
         Serial.print("\n");
         return i;
       }
-      else if(MasterGame.isWinningColumn(i, false)
+      else if(MasterGame.isWinningColumn(i, false))
       {
-        columnValue[i] += 1000;
+        columnValues[i] += 1000;
       }
       else
       {
