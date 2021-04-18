@@ -26,7 +26,7 @@ public:
   int decideAIMove(Game MasterGame)
   {
     //Game AIGame(MasterGame);
-    int columnValues[] = {15, 30, 50, 53, 50, 30, 15};
+    int columnValues[] = {15, 30, 50, 55, 50, 30, 15};
     // byte bestScore = -Game::WIDTH*Game::HEIGHT/2 - 1;//Always worse that worst score
     int bestScore;
     byte bestIndex = 0;
@@ -43,15 +43,21 @@ public:
     for(i = 0; i < Game::width; ++i)
     {
       if(!MasterGame.canPlay(i))
+      {
         columnValues[i] -= 2000;//can't play column
-      if(columnValues[i] >= 0 && (MasterGame.isWinningColumn(i, false) || MasterGame.isWinningColumn(i, true)))
+      }
+      else if(MasterGame.isWinningColumn(i, true))
       {
         Serial.print("I can win here: ");
         Serial.print(i);
         Serial.print("\n");
         return i;
       }
-      if(columnValues[i] >= 0)
+      else if(MasterGame.isWinningColumn(i, false)
+      {
+        columnValue[i] += 1000;
+      }
+      else
       {
         Game AIGame(MasterGame);
         AIGame.makeAIMove(i);
@@ -66,31 +72,6 @@ public:
         columnValues[i] -= MasterGame.getGridCol(i)*2;
       }
     }
-
-    //Test each possible move, if the human can win after this move reduce this columns score
-    //If the ai has a chance of winning by playing this column increase score
-//    for(i = 0; i < Game::width; ++i)
-//    {
-//      if(columnValues[i] >= 0)
-//      {
-//        Game AIGame(MasterGame);
-//        AIGame.makeAIMove(i);
-//        if(AIGame.findWinningColumn(true))
-//        {
-//          columnValues[i] -= 1000; //human can win if AI plays here
-//        }
-//        else if(AIGame.findWinningColumn(false))
-//        {
-//          columnValues[i] += 200; //AI will have a chance to win
-//        }
-//      }
-//    }
-
-    //Remove point from columns based on how many tokens have been played in that column
-//    for(i = 0; i < Game::width; ++i)
-//    {
-//      columnValues[i] -= MasterGame.getGridCol(i)*2;
-//    }
 
     //Print scores
     Serial.print("{ ");

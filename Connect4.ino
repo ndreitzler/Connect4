@@ -76,7 +76,7 @@ void processUserInput(char keyPress)
   static Corkscrew purpleCork(CORK_PURPLE_STEP_PIN, CORK_PURPLE_DIR_PIN, CORK_PURPLE_EN_PIN, CORK_PURPLE_UDELAY);
   static Corkscrew orangeCork(CORK_ORANGE_STEP_PIN, CORK_ORANGE_DIR_PIN, CORK_ORANGE_EN_PIN, CORK_ORANGE_UDELAY);
   static bool isGameOver = false;
-  static bool first = true;
+  static bool gameStart = true;
   byte AImove;
 
   //Serial.println(keyPress);
@@ -87,20 +87,20 @@ void processUserInput(char keyPress)
   //   isGameOver = true;
   //Process Input
 
-  if(first)
+  if(gameStart)
   {
     if (keyPress == '1')
     {
-      first = false;
+      gameStart = false;
       return;
     }
     else if(keyPress == '2')
     {
       randomSeed(analogRead(A1));
-      AImove = random(3,6); //AI will pick a random column between 3,4,5
+      AImove = random(3,5); //AI will pick a random column between 3,4,5
       dropToken(dropper, AImove, purpleCork); //Drop AI's token
       MasterGame.makeAIMove(AImove); //Record AI move
-      first = false;
+      gameStart = false;
     } else {
       beep();
     }
@@ -115,6 +115,7 @@ void processUserInput(char keyPress)
       case '*':
         resetAll(MasterGame, sorter, crankShaft, dropper, sorterMotor, purpleCork, orangeCork);
         isGameOver = false;
+        gameStart = true;
         break;
       case 'A':
         purpleCork.debugUp(10);

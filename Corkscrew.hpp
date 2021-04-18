@@ -18,7 +18,10 @@
 #include "Connect4.h"
 #include "StepperMotor.hpp"
 
-//#define MOVE_DISTANCE 20 //Steps to move tokens up or down once on the corkscrew
+#define JIGGLE_NUM 3
+#define JIGGLE_DIV 16
+#define NUMBER_OF_JIGGLES 2
+#define EXTRA_STEPS 50
 
 class Corkscrew : public StepperMotor {
   public:
@@ -41,15 +44,15 @@ class Corkscrew : public StepperMotor {
     void loadUpOne(void)
     {
       turnMotorOn();
-      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/4, COUNTER_WISE);
+      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/4+EXTRA_STEPS, COUNTER_WISE);
       //Jiggle for stuck tokens
-      for(int i = 0; i < 1; ++i)
+      for(int i = 0; i < NUMBER_OF_JIGGLES; ++i)
       {
-        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/8, CLOCK_WISE);
+        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)*JIGGLE_NUM/JIGGLE_DIV, CLOCK_WISE);
         delay(100);
-        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)/8, COUNTER_WISE);
+        moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution)*JIGGLE_NUM/JIGGLE_DIV, COUNTER_WISE);
       }
-      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution*3)/4, COUNTER_WISE);
+      moveMotor((CORK_PURPLE_MICRO_STEP * stepsPerRevolution*3)/4-EXTRA_STEPS, COUNTER_WISE);
       turnMotorOff();
     }
     
